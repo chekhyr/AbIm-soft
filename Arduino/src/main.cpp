@@ -1,57 +1,50 @@
 #include <Arduino.h>
-boolean trig = true;
+boolean TRIG = true;
+int Tblink = 150;
 
-int cameraDelay = 250;
-void cameraTake(void){
-  digitalWrite(4, HIGH);  //вкл сигнал камеры
-  delay(50); //длина сигнала камеры
-  digitalWrite(4, LOW);  //выкл сигнал камеры
-  delayMicroseconds(280); //экспозиция
-}
-
-float timeAbIm = 30;
-void absorptionTake(void){
-  digitalWrite(2, HIGH);  //вкл AbIm
-  delayMicroseconds(timeAbIm);
-  digitalWrite(2, LOW);  //выкл AbIm
+void blinkAbIm(int t){
+  delayMicroseconds(100);
+  digitalWrite(2, HIGH);
+  delayMicroseconds(t);
+  digitalWrite(2, LOW);
 }
 
 void setup(void){
   Serial.begin(9600);
-  pinMode(2, OUTPUT);  //АОМ AbIm
-  pinMode(3, OUTPUT);  //АОМ МОЛ
-  pinMode(4, OUTPUT);  //камера
+  
+  pinMode(2, OUTPUT);  //сигнал AbIm (off) рабтает
+  pinMode(3, OUTPUT);  //сингал МОЛ (off)
+  pinMode(4, OUTPUT);  //сигнал CCD (on)
   pinMode(5, INPUT_PULLUP);  //кнопка
+  
+  digitalWrite(2, LOW);  //AbIm
+  digitalWrite(3, HIGH);  //MOT
+  digitalWrite(4, HIGH);  //CCD
+
+  Serial.println("INIT complete!");
 }
 
 void loop(void){
-  if(trig){
-    digitalWrite(3, HIGH); //вкл МОЛ
-    digitalWrite(2, LOW);  //выкл AbIm
-    delay(500);
+  if(TRIG){
+    digitalWrite(4, LOW);
+    blinkAbIm(Tblink);
+    delayMicroseconds(1000-Tblink);
+    digitalWrite(4, HIGH);
+    digitalWrite(3, LOW);
+
+    delay(50);
+    digitalWrite(4, LOW);
+    blinkAbIm(Tblink);
+    delayMicroseconds(1000-Tblink);
+    digitalWrite(4, HIGH);
     
-    cameraTake(); //фото атомов (+МОЛ-МОЛ+AbIm)
-    digitalWrite(3, LOW);  //выкл МОЛ
-    delayMicroseconds(1);
-    absorptionTake();
-    delay(cameraDelay);
-    
-    cameraTake(); //фото луча AbIm (-МОЛ+AbIm)
-    absorptionTake();
-    delayMicroseconds(20);
-    delay(cameraDelay);    
-    
-    cameraTake();  //фото шума (-МОЛ-AbIm)
-    delay(cameraDelay);
-    
-    digitalWrite(2, HIGH);  //вкл AbIm
-    digitalWrite(3, HIGH);  //вкл МОЛ 
-    trig = false;
+    digitalWrite(3, HIGH);
+    TRIG = false;
   }
-  else {
+  else{
     if(!digitalRead(5)){
-      Serial.println("Recieved TRIG");
-      trig = true;
+          Serial.println("received TRIG");
+          TRIG = true;    
     }
   }
   delay(100);
