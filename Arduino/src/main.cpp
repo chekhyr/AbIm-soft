@@ -23,7 +23,8 @@ void setup(void){
 }
 
 int Tblink = 10;
-int EXPdelay = 200;
+int EXPdelay = 200; // should be around 62us
+// see https://www.thorlabs.us/Thorcat/15900/15982-D02/index.html
 void loop(void){
   if(TRIG){
     digitalWrite(4, LOW); //CCD trig
@@ -41,8 +42,15 @@ void loop(void){
     blinkAbIm(Tblink); //AbIm
     
     delay(50);
-    digitalWrite(3, HIGH); //MOT on
     digitalWrite(4, HIGH); //CCD reload
+    delay(50);
+
+    digitalWrite(4, LOW); //CCD trig
+    delayMicroseconds(EXPdelay); //waiting for the exposure start
+
+    delay(50);
+    digitalWrite(4, HIGH); //CCD reload
+    digitalWrite(3, HIGH); //MOT on
     TRIG = false;
   }
   else{
