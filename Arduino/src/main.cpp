@@ -1,9 +1,7 @@
 #include <Arduino.h>
 boolean TRIG = true;
-int Tblink = 150;
 
 void blinkAbIm(int t){
-  delayMicroseconds(100);
   digitalWrite(2, HIGH);
   delayMicroseconds(t);
   digitalWrite(2, LOW);
@@ -12,33 +10,39 @@ void blinkAbIm(int t){
 void setup(void){
   Serial.begin(9600);
   
-  pinMode(2, OUTPUT);  //сигнал AbIm (off) рабтает
-  pinMode(3, OUTPUT);  //сингал МОЛ (off)
-  pinMode(4, OUTPUT);  //сигнал CCD (on)
+  pinMode(2, OUTPUT);  //сигнал AbIm
+  pinMode(3, OUTPUT);  //сингал МОЛ
+  pinMode(4, OUTPUT);  //сигнал CCD
   pinMode(5, INPUT_PULLUP);  //кнопка
   
-  digitalWrite(2, LOW);  //AbIm
-  digitalWrite(3, HIGH);  //MOT
-  digitalWrite(4, HIGH);  //CCD
+  digitalWrite(2, LOW);  //AbIm off
+  digitalWrite(3, HIGH);  //MOT on
+  digitalWrite(4, HIGH);  //CCD on
 
   Serial.println("INIT complete!");
 }
 
+int Tblink = 10;
+int EXPdelay = 200;
 void loop(void){
   if(TRIG){
-    digitalWrite(4, LOW);
-    blinkAbIm(Tblink);
-    delayMicroseconds(1000-Tblink);
-    digitalWrite(4, HIGH);
-    digitalWrite(3, LOW);
+    digitalWrite(4, LOW); //CCD trig
+    delayMicroseconds(EXPdelay); //waiting for the exposure start
+    
+    digitalWrite(3, LOW); //MOT off
+    blinkAbIm(Tblink); //AbIm
 
     delay(50);
-    digitalWrite(4, LOW);
-    blinkAbIm(Tblink);
-    delayMicroseconds(1000-Tblink);
-    digitalWrite(4, HIGH);
+    digitalWrite(4, HIGH); //CCD reload
+    delay(50);
+
+    digitalWrite(4, LOW); //CCD trig
+    delayMicroseconds(EXPdelay); //waiting for the exposure start
+    blinkAbIm(Tblink); //AbIm
     
-    digitalWrite(3, HIGH);
+    delay(50);
+    digitalWrite(3, HIGH); //MOT on
+    digitalWrite(4, HIGH); //CCD reload
     TRIG = false;
   }
   else{
